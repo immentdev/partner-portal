@@ -1,0 +1,8 @@
+# Minimal config for Supabase CLI (partner-portal)
+project_id = "partner-portal"
+
+[api]
+enabled = true
+
+[db]
+major_version = 15

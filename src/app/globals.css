@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --trust-blue: #5195ff;
+  --trust-blue-dark: #0e2d54;
+  --equity-magenta: #d30083;
+  --signal-teal: #05d8c8;
+  --bg: #f5f8fc;
+  --surface: #ffffff;
+}
+
+body {
+  color: var(--trust-blue-dark);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(81, 149, 255, 0.18), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(5, 216, 200, 0.12), transparent 55%),
+    var(--bg);
+  min-height: 100vh;
+}

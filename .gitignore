@@ -1,0 +1,37 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# build
+.next/
+out/
+dist/
+.turbo/
+*.tsbuildinfo
+
+# logs / OS
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+
+# IDE / local
+.idea/
+.vscode/
+*.local
+
+# Netlify
+.netlify/
+
+# smoke artifacts
+scripts/.smoke-output/
+
+# OpenAPI scaricato (rigenerabile con npm run mokapen:openapi)
+docs/mokapen-openapi.json

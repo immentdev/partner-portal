@@ -1,0 +1,19 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Riconciliazione notturna ~02:00 Europe/Rome
+[functions."reconcile-nightly"]
+  schedule = "0 1 * * *"
+
+# SLA check giorni feriali ~08:00 Europe/Rome
+[functions."sla-check"]
+  schedule = "0 7 * * 1-5"
