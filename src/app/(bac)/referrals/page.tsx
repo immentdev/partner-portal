@@ -6,13 +6,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { AppRole } from "@/lib/auth/roles";
-
-function feeLabel(value: number | null | undefined, kind: "prevista" | "maturata") {
-  if (value == null || Number(value) === 0) {
-    return kind === "maturata" ? "nessuna fee maturata" : "—";
-  }
-  return `€ ${Number(value).toLocaleString("it-IT", { minimumFractionDigits: 0 })}`;
-}
+import { StatusPill } from "@/components/ui/StatusPill";
+import { formatFee } from "@/lib/ui/labels";
 
 export default async function ReferralsPage({
   searchParams,
@@ -37,7 +32,10 @@ export default async function ReferralsPage({
     .single();
 
   const role = profile?.role as AppRole | undefined;
-  const isNazionale = role === "bac_nazionale" || role === "super_admin" || role === "imment_admin";
+  const isNazionale =
+    role === "bac_nazionale" ||
+    role === "super_admin" ||
+    role === "imment_admin";
 
   let query = supabase
     .schema("partner")
@@ -70,11 +68,15 @@ export default async function ReferralsPage({
         .select("referral_id, fee_prevista, fee_maturata, is_primary")
         .in("referral_id", referralIds)
         .eq("is_primary", true)
-    : { data: [] as Array<{ referral_id: string; fee_prevista: number; fee_maturata: number }> };
+    : {
+        data: [] as Array<{
+          referral_id: string;
+          fee_prevista: number;
+          fee_maturata: number;
+        }>,
+      };
 
-  const feeByReferral = new Map(
-    (fees ?? []).map((f) => [f.referral_id, f]),
-  );
+  const feeByReferral = new Map((fees ?? []).map((f) => [f.referral_id, f]));
 
   const { data: territories } = isNazionale
     ? await supabase
@@ -84,48 +86,72 @@ export default async function ReferralsPage({
         .order("code")
     : { data: [] as Array<{ id: string; code: string; name: string }> };
 
+  const total = (referrals ?? []).length;
+  const activeCount = (referrals ?? []).filter(
+    (r) => r.macrostate === "incarico_attivo",
+  ).length;
+  const reviewingCount = (referrals ?? []).filter(
+    (r) => r.macrostate === "in_valutazione",
+  ).length;
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-trust-dark">
-            Segnalazioni
-          </h1>
-          <p className="text-sm text-trust-dark/65">
-            Stato commerciale e fee (da Mokapen). Separazione territori via RLS.
+          <h1 className="page-title">Segnalazioni</h1>
+          <p className="page-sub">
+            Pipeline commerciale BAC, stati Mokapen e fee partner.
           </p>
         </div>
-        <Link
-          href="/referrals/new"
-          className="rounded-control bg-trust px-3 py-2 text-sm font-medium text-white"
-        >
+        <Link href="/referrals/new" className="btn-primary">
           Nuova segnalazione
         </Link>
       </div>
 
+      <dl className="grid grid-cols-1 overflow-hidden rounded-[var(--radius-card)] border border-[var(--border)] sm:grid-cols-3">
+        <div className="px-4 py-3.5">
+          <dt className="text-[13px] text-[var(--muted)]">In elenco</dt>
+          <dd className="num mt-1.5 text-[24px] font-semibold leading-none">
+            {total}
+          </dd>
+        </div>
+        <div className="border-t border-[var(--border)] px-4 py-3.5 sm:border-l sm:border-t-0">
+          <dt className="text-[13px] text-[var(--muted)]">Incarico attivo</dt>
+          <dd className="num mt-1.5 text-[24px] font-semibold leading-none">
+            {activeCount}
+          </dd>
+        </div>
+        <div className="border-t border-[var(--border)] px-4 py-3.5 sm:border-l sm:border-t-0">
+          <dt className="text-[13px] text-[var(--muted)]">In valutazione</dt>
+          <dd className="num mt-1.5 text-[24px] font-semibold leading-none">
+            {reviewingCount}
+          </dd>
+        </div>
+      </dl>
+
       {isNazionale ? (
-        <form className="mb-4 flex flex-wrap gap-3 rounded-card bg-white p-4 shadow-soft">
-          <label className="text-sm">
-            Territorio
+        <form className="flex flex-wrap items-end gap-3 rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--raised)] p-4">
+          <label className="space-y-1 text-[13px] text-[var(--muted)]">
+            <span className="block">Territorio</span>
             <select
               name="territory"
               defaultValue={searchParams.territory ?? ""}
-              className="ml-2 rounded-control border border-trust-dark/15 px-2 py-1"
+              className="field-input min-w-[160px]"
             >
               <option value="">Tutti</option>
               {(territories ?? []).map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.code} — {t.name}
+                  {t.code} · {t.name}
                 </option>
               ))}
             </select>
           </label>
-          <label className="text-sm">
-            Macrostato
+          <label className="space-y-1 text-[13px] text-[var(--muted)]">
+            <span className="block">Macrostato</span>
             <select
               name="macrostate"
               defaultValue={searchParams.macrostate ?? ""}
-              className="ml-2 rounded-control border border-trust-dark/15 px-2 py-1"
+              className="field-input min-w-[180px]"
             >
               <option value="">Tutti</option>
               <option value="in_valutazione">In valutazione</option>
@@ -135,49 +161,46 @@ export default async function ReferralsPage({
               <option value="chiuso_non_acquisito">Chiuso non acquisito</option>
             </select>
           </label>
-          <label className="text-sm">
-            Dal
+          <label className="space-y-1 text-[13px] text-[var(--muted)]">
+            <span className="block">Dal</span>
             <input
               type="date"
               name="from"
               defaultValue={searchParams.from ?? ""}
-              className="ml-2 rounded-control border border-trust-dark/15 px-2 py-1"
+              className="field-input"
             />
           </label>
-          <label className="text-sm">
-            Al
+          <label className="space-y-1 text-[13px] text-[var(--muted)]">
+            <span className="block">Al</span>
             <input
               type="date"
               name="to"
               defaultValue={searchParams.to ?? ""}
-              className="ml-2 rounded-control border border-trust-dark/15 px-2 py-1"
+              className="field-input"
             />
           </label>
-          <button
-            type="submit"
-            className="rounded-control bg-trust-dark px-3 py-1.5 text-sm text-white"
-          >
+          <button type="submit" className="btn-primary">
             Filtra
           </button>
         </form>
       ) : null}
 
       {error ? (
-        <p className="text-sm text-equity">{error.message}</p>
+        <p className="text-[13px] text-[var(--negative)]">{error.message}</p>
       ) : (
-        <div className="overflow-x-auto rounded-card bg-white shadow-soft">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-trust-dark/10 bg-trust-dark/[0.03] text-trust-dark/70">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-left">
+            <thead>
               <tr>
-                <th className="px-4 py-3 font-medium">Codice</th>
-                <th className="px-4 py-3 font-medium">Startup</th>
+                <th className="table-head table-cell">Codice</th>
+                <th className="table-head table-cell">Startup</th>
                 {isNazionale ? (
-                  <th className="px-4 py-3 font-medium">Territorio</th>
+                  <th className="table-head table-cell">Territorio</th>
                 ) : null}
-                <th className="px-4 py-3 font-medium">Macrostato</th>
-                <th className="px-4 py-3 font-medium">Fee prevista</th>
-                <th className="px-4 py-3 font-medium">Fee maturata</th>
-                <th className="px-4 py-3 font-medium">Aggiornato</th>
+                <th className="table-head table-cell">Macrostato</th>
+                <th className="table-head table-cell text-right">Fee prevista</th>
+                <th className="table-head table-cell text-right">Fee maturata</th>
+                <th className="table-head table-cell text-right">Aggiornato</th>
               </tr>
             </thead>
             <tbody>
@@ -185,9 +208,10 @@ export default async function ReferralsPage({
                 <tr>
                   <td
                     colSpan={isNazionale ? 7 : 6}
-                    className="px-4 py-8 text-center text-trust-dark/50"
+                    className="border border-dashed border-[var(--control)] px-4 py-8 text-center text-[14px] text-[var(--muted)]"
                   >
-                    Nessuna segnalazione
+                    Nessuna segnalazione in questo filtro. Apri una nuova
+                    segnalazione per avviare il pipeline.
                   </td>
                 </tr>
               ) : (
@@ -201,28 +225,39 @@ export default async function ReferralsPage({
                     ? terr[0]?.code
                     : terr?.code;
                   return (
-                    <tr key={r.id} className="border-t border-trust-dark/5">
-                      <td className="px-4 py-3">
+                    <tr
+                      key={r.id}
+                      className="border-t border-[var(--rule)] hover:bg-[var(--raised)]/60"
+                    >
+                      <td className="table-cell">
                         <Link
-                          className="text-trust hover:underline"
+                          className="font-medium text-[var(--text)] underline-offset-2 hover:underline"
                           href={`/referrals/${r.id}`}
                         >
                           {r.code}
                         </Link>
                       </td>
-                      <td className="px-4 py-3">{r.company_name}</td>
+                      <td className="table-cell font-medium text-[var(--text)]">
+                        {r.company_name}
+                      </td>
                       {isNazionale ? (
-                        <td className="px-4 py-3">{terrLabel ?? "—"}</td>
+                        <td className="table-cell">
+                          <span className="rounded px-1.5 py-0.5 text-[12px] font-medium text-[var(--muted)] bg-[var(--raised)]">
+                            {terrLabel ?? "—"}
+                          </span>
+                        </td>
                       ) : null}
-                      <td className="px-4 py-3">{r.macrostate}</td>
-                      <td className="px-4 py-3">
-                        {feeLabel(fee?.fee_prevista, "prevista")}
+                      <td className="table-cell">
+                        <StatusPill value={r.macrostate} />
                       </td>
-                      <td className="px-4 py-3">
-                        {feeLabel(fee?.fee_maturata, "maturata")}
+                      <td className="table-cell num text-right text-[var(--text)]">
+                        {formatFee(fee?.fee_prevista, "prevista")}
                       </td>
-                      <td className="px-4 py-3">
-                        {new Date(r.updated_at).toLocaleString("it-IT")}
+                      <td className="table-cell num text-right text-[var(--muted)]">
+                        {formatFee(fee?.fee_maturata, "maturata")}
+                      </td>
+                      <td className="table-cell text-right text-[13px] text-[var(--faint)]">
+                        {new Date(r.updated_at).toLocaleDateString("it-IT")}
                       </td>
                     </tr>
                   );

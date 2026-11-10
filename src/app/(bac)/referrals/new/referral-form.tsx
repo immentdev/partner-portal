@@ -28,8 +28,8 @@ function Field({
   onChange,
 }: FieldProps) {
   return (
-    <label className="block space-y-1 text-sm">
-      <span>
+    <label className="block space-y-1.5 text-[14px]">
+      <span className="font-medium">
         {label}
         {required ? " *" : ""}
       </span>
@@ -40,7 +40,7 @@ function Field({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-control border border-trust-dark/15 px-3 py-2 outline-none focus:border-trust"
+        className="field-input"
       />
     </label>
   );
@@ -111,10 +111,7 @@ export function ReferralForm() {
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="space-y-4 rounded-card bg-white p-6 shadow-soft"
-    >
+    <form onSubmit={onSubmit} className="panel space-y-4 p-5 sm:p-6">
       <Field
         label="Ragione sociale startup"
         name="company_name"
@@ -173,33 +170,29 @@ export function ReferralForm() {
         value={form.relationship_nature}
         onChange={(v) => set("relationship_nature", v)}
       />
-      <label className="block space-y-1 text-sm">
-        <span>Note</span>
+      <label className="block space-y-1.5 text-[14px]">
+        <span className="font-medium">Note</span>
         <textarea
           name="notes"
           rows={3}
           value={form.notes}
           onChange={(e) => set("notes", e.target.value)}
-          className="w-full rounded-control border border-trust-dark/15 px-3 py-2 outline-none focus:border-trust"
+          className="w-full rounded-[var(--radius-control)] border border-[var(--control)] bg-white px-3 py-2 text-[14px] outline-none focus:border-[var(--accent)]"
         />
       </label>
 
       {error ? (
-        <p className="text-sm text-equity" role="alert">
+        <p className="text-[13px] text-[var(--negative)]" role="alert">
           {error}
         </p>
       ) : null}
       {success ? (
-        <p className="text-sm text-signal" role="status">
+        <p className="text-[13px] text-[var(--positive)]" role="status">
           {success}
         </p>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={busy}
-        className="rounded-control bg-trust-dark px-4 py-2.5 text-sm font-medium text-white disabled:opacity-60"
-      >
+      <button type="submit" disabled={busy} className="btn-primary">
         {busy ? "Invio…" : "Invia segnalazione"}
       </button>
     </form>

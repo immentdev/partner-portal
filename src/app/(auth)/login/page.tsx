@@ -11,17 +11,32 @@ export default function LoginPage({
   searchParams: { next?: string; error?: string };
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-8 px-4 py-16">
-      <div className="space-y-2 text-center">
-        <p className="font-display text-3xl font-semibold tracking-tight text-trust-dark">
-          Imment
-        </p>
-        <h1 className="text-lg text-trust-dark/80">Partner Portal BAC</h1>
-        <p className="text-sm text-trust-dark/60">
-          Accedi con le credenziali invitate. Nessuna registrazione libera.
-        </p>
+    <div className="space-y-6">
+      <div className="rounded-[var(--radius-sheet)] border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8">
+        <div className="mb-6 space-y-2">
+          <h1 className="page-title">Accedi</h1>
+          <p className="page-sub">
+            Credenziali invitate per i partner BAC. Nessuna registrazione libera.
+          </p>
+        </div>
+        <LoginForm nextPath={searchParams.next} error={searchParams.error} />
+        <dl className="mt-8 grid gap-3 border-t border-[var(--rule)] pt-6 text-[13px] sm:grid-cols-3">
+          <div>
+            <dt className="text-[var(--faint)]">Per chi</dt>
+            <dd className="mt-1 font-medium text-[var(--text)]">BAC e Imment</dd>
+          </div>
+          <div>
+            <dt className="text-[var(--faint)]">Cosa trovi</dt>
+            <dd className="mt-1 font-medium text-[var(--text)]">
+              Segnalazioni e fee
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[var(--faint)]">Stati</dt>
+            <dd className="mt-1 font-medium text-[var(--text)]">Da Mokapen</dd>
+          </div>
+        </dl>
       </div>
-      <LoginForm nextPath={searchParams.next} error={searchParams.error} />
     </div>
   );
 }

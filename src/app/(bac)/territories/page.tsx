@@ -4,6 +4,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
+import { formatMoney } from "@/lib/ui/labels";
 
 export default async function TerritoriesPage() {
   const supabase = createClient();
@@ -49,48 +50,67 @@ export default async function TerritoriesPage() {
       converted,
       maturata,
       prevista,
-      daLiquidare: maturata, // liquidata arriva in Fase 4
+      daLiquidare: maturata,
     };
   });
 
-  return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <h1 className="font-display text-2xl font-semibold text-trust-dark">
-        Riepilogo territori
-      </h1>
-      <p className="mt-1 text-sm text-trust-dark/65">
-        Vista Nazionale — fee da Mokapen; liquidazioni in Fase 4.
-      </p>
+  const totalSent = rows.reduce((acc, r) => acc + r.sent, 0);
+  const totalMaturata = rows.reduce((acc, r) => acc + r.maturata, 0);
 
-      <div className="mt-6 overflow-x-auto rounded-card bg-white shadow-soft">
-        <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="border-b border-trust-dark/10 bg-trust-dark/[0.03] text-trust-dark/70">
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="page-title">Territori</h1>
+        <p className="page-sub">
+          Vista Nazionale · {totalSent} segnalazioni · fee maturata{" "}
+          <span className="num font-medium text-[var(--text)]">
+            {formatMoney(totalMaturata)}
+          </span>
+          . Liquidazioni in Fase 4.
+        </p>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[640px] text-left">
+          <thead>
             <tr>
-              <th className="px-4 py-3 font-medium">Territorio</th>
-              <th className="px-4 py-3 font-medium">Inviati</th>
-              <th className="px-4 py-3 font-medium">Accettati</th>
-              <th className="px-4 py-3 font-medium">Convertiti</th>
-              <th className="px-4 py-3 font-medium">Fee maturata</th>
-              <th className="px-4 py-3 font-medium">Fee prevista</th>
+              <th className="table-head table-cell">Territorio</th>
+              <th className="table-head table-cell text-right">Inviati</th>
+              <th className="table-head table-cell text-right">Accettati</th>
+              <th className="table-head table-cell text-right">Convertiti</th>
+              <th className="table-head table-cell text-right">Fee maturata</th>
+              <th className="table-head table-cell text-right">Fee prevista</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="border-t border-trust-dark/5">
-                <td className="px-4 py-3">
-                  {r.code} — {r.name}
-                </td>
-                <td className="px-4 py-3">{r.sent}</td>
-                <td className="px-4 py-3">{r.accepted}</td>
-                <td className="px-4 py-3">{r.converted}</td>
-                <td className="px-4 py-3">
-                  € {r.maturata.toLocaleString("it-IT")}
-                </td>
-                <td className="px-4 py-3">
-                  € {r.prevista.toLocaleString("it-IT")}
+            {rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="border border-dashed border-[var(--control)] px-4 py-8 text-center text-[14px] text-[var(--muted)]"
+                >
+                  Nessun territorio configurato.
                 </td>
               </tr>
-            ))}
+            ) : (
+              rows.map((r) => (
+                <tr key={r.id} className="border-t border-[var(--rule)]">
+                  <td className="table-cell">
+                    <span className="font-medium">{r.code}</span>
+                    <span className="text-[var(--muted)]"> · {r.name}</span>
+                  </td>
+                  <td className="table-cell num text-right">{r.sent}</td>
+                  <td className="table-cell num text-right">{r.accepted}</td>
+                  <td className="table-cell num text-right">{r.converted}</td>
+                  <td className="table-cell num text-right">
+                    {formatMoney(r.maturata)}
+                  </td>
+                  <td className="table-cell num text-right text-[var(--muted)]">
+                    {formatMoney(r.prevista)}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

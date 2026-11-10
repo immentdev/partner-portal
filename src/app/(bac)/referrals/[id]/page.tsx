@@ -6,6 +6,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { StatusPill } from "@/components/ui/StatusPill";
+import { formatMoney, macrostateLabel } from "@/lib/ui/labels";
 
 export default async function ReferralDetailPage({
   params,
@@ -45,101 +47,169 @@ export default async function ReferralDetailPage({
         .order("created_at", { ascending: false })
     : { data: [] };
 
+  const primaryFee = (deals ?? []).find((d) => d.is_primary)?.fee_partner;
+
   return (
-    <div className="mx-auto max-w-3xl space-y-8 px-4 py-10">
-      <div>
-        <Link href="/referrals" className="text-sm text-trust hover:underline">
-          ← Elenco
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <Link
+          href="/referrals"
+          className="text-[13px] text-[var(--muted)] hover:text-[var(--text)]"
+        >
+          ← Elenco segnalazioni
         </Link>
-        <h1 className="mt-2 font-display text-2xl font-semibold text-trust-dark">
-          {referral.code}
-        </h1>
-        <p className="text-trust-dark/70">{referral.company_name}</p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="page-title">{referral.code}</h1>
+            <p className="page-sub">{referral.company_name}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusPill value={referral.macrostate} />
+            {primaryFee != null ? (
+              <span className="num text-[18px] font-semibold text-[var(--text)]">
+                {formatMoney(primaryFee)}
+                <span className="ml-1 text-[12px] font-normal text-[var(--muted)]">
+                  fee
+                </span>
+              </span>
+            ) : null}
+          </div>
+        </div>
       </div>
 
-      <section className="rounded-card bg-white p-5 shadow-soft">
-        <h2 className="mb-3 font-medium text-trust-dark">Stato</h2>
-        <dl className="grid grid-cols-2 gap-3 text-sm">
+      <section className="panel p-5">
+        <h2 className="mb-4 text-[16px] font-medium text-[var(--text)]">Stato</h2>
+        <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <dt className="text-trust-dark/55">Macrostato</dt>
-            <dd>{referral.macrostate}</dd>
+            <dt className="text-[12px] text-[var(--muted)]">Macrostato</dt>
+            <dd className="mt-1">
+              <StatusPill value={referral.macrostate} />
+            </dd>
           </div>
           <div>
-            <dt className="text-trust-dark/55">Esito</dt>
-            <dd>{referral.outcome}</dd>
+            <dt className="text-[12px] text-[var(--muted)]">Esito</dt>
+            <dd className="mt-1 text-[14px]">{referral.outcome ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-trust-dark/55">Finestra</dt>
-            <dd>
+            <dt className="text-[12px] text-[var(--muted)]">Finestra</dt>
+            <dd className="mt-1 text-[14px]">
               {referral.window_end
                 ? new Date(referral.window_end).toLocaleDateString("it-IT")
                 : "—"}
             </dd>
           </div>
           <div>
-            <dt className="text-trust-dark/55">Sync</dt>
-            <dd>{referral.sync_status}</dd>
+            <dt className="text-[12px] text-[var(--muted)]">Sync Mokapen</dt>
+            <dd className="mt-1 text-[14px]">{referral.sync_status ?? "—"}</dd>
           </div>
         </dl>
       </section>
 
-      <section className="rounded-card bg-white p-5 shadow-soft">
-        <h2 className="mb-3 font-medium text-trust-dark">Deal collegati</h2>
-        {(deals ?? []).length === 0 ? (
-          <p className="text-sm text-trust-dark/55">Nessun deal collegato</p>
-        ) : (
-          <ul className="space-y-3 text-sm">
-            {(deals ?? []).map((d) => (
-              <li
-                key={d.id}
-                className="border-t border-trust-dark/5 pt-3 first:border-0 first:pt-0"
-              >
-                <div className="flex flex-wrap justify-between gap-2">
-                  <span>
-                    Mokapen #{d.mokapen_deal_id}
-                    {d.is_primary ? " · primario" : ""}
-                  </span>
-                  <span>{d.mokapen_status_title ?? "—"}</span>
-                </div>
-                <div className="mt-1 text-trust-dark/65">
-                  Fee:{" "}
-                  {d.fee_partner != null
-                    ? `€ ${Number(d.fee_partner).toLocaleString("it-IT")}`
-                    : "—"}
-                  {d.cashed_at ? " · maturata" : " · prevista"}
-                  {" · "}
-                  Eleggibilità:{" "}
-                  {d.eligible == null
-                    ? "n/d"
-                    : d.eligible
-                      ? "sì"
-                      : "no (fuori finestra)"}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="panel p-5">
+          <h2 className="mb-4 text-[16px] font-medium text-[var(--text)]">
+            Contatto e prodotto
+          </h2>
+          <dl className="space-y-3 text-[14px]">
+            <div className="flex justify-between gap-3">
+              <dt className="text-[var(--muted)]">P.IVA</dt>
+              <dd className="num text-right">{referral.vat_number ?? "—"}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-[var(--muted)]">Referente</dt>
+              <dd className="text-right">{referral.contact_name ?? "—"}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-[var(--muted)]">Email</dt>
+              <dd className="text-right">{referral.contact_email ?? "—"}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-[var(--muted)]">Prodotto</dt>
+              <dd className="text-right">{referral.product ?? "—"}</dd>
+            </div>
+          </dl>
+        </section>
 
-      <section className="rounded-card bg-white p-5 shadow-soft">
-        <h2 className="mb-3 font-medium text-trust-dark">
+        <section className="panel p-5">
+          <h2 className="mb-4 text-[16px] font-medium text-[var(--text)]">
+            Deal collegati
+          </h2>
+          {(deals ?? []).length === 0 ? (
+            <p className="rounded-lg border border-dashed border-[var(--control)] px-3 py-6 text-center text-[13px] text-[var(--muted)]">
+              Nessun deal collegato ancora.
+            </p>
+          ) : (
+            <ul className="space-y-3 text-[14px]">
+              {(deals ?? []).map((d) => (
+                <li
+                  key={d.id}
+                  className="border-t border-[var(--rule)] pt-3 first:border-0 first:pt-0"
+                >
+                  <div className="flex flex-wrap justify-between gap-2">
+                    <span className="font-medium">
+                      Mokapen #{d.mokapen_deal_id}
+                      {d.is_primary ? (
+                        <span className="ml-2 text-[12px] font-normal text-[var(--muted)]">
+                          primario
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="text-[var(--muted)]">
+                      {d.mokapen_status_title ?? "—"}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap justify-between gap-2 text-[13px] text-[var(--muted)]">
+                    <span className="num text-[var(--text)]">
+                      Fee {formatMoney(d.fee_partner)}
+                      <span className="text-[var(--muted)]">
+                        {d.cashed_at ? " · maturata" : " · prevista"}
+                      </span>
+                    </span>
+                    <span>
+                      Eleggibilità:{" "}
+                      {d.eligible == null
+                        ? "n/d"
+                        : d.eligible
+                          ? "sì"
+                          : "no (fuori finestra)"}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      <section className="panel p-5">
+        <h2 className="mb-4 text-[16px] font-medium text-[var(--text)]">
           Cronologia macrostati
         </h2>
         {(events ?? []).length === 0 ? (
-          <p className="text-sm text-trust-dark/55">Nessun evento di fase</p>
+          <p className="rounded-lg border border-dashed border-[var(--control)] px-3 py-6 text-center text-[13px] text-[var(--muted)]">
+            Nessun evento di fase registrato.
+          </p>
         ) : (
-          <ol className="space-y-2 text-sm">
+          <ol className="space-y-0">
             {(events ?? []).map((ev) => (
-              <li key={ev.id} className="flex justify-between gap-3">
-                <span>
-                  {ev.previous_macrostate ?? "—"} →{" "}
-                  <strong>{ev.macrostate}</strong>
-                  <span className="text-trust-dark/55">
+              <li
+                key={ev.id}
+                className="flex flex-wrap items-baseline justify-between gap-3 border-t border-[var(--rule)] py-3 first:border-0 first:pt-0"
+              >
+                <span className="text-[14px]">
+                  <span className="text-[var(--muted)]">
+                    {macrostateLabel(ev.previous_macrostate)}
+                  </span>
+                  {" → "}
+                  <strong className="font-medium">
+                    {macrostateLabel(ev.macrostate)}
+                  </strong>
+                  <span className="text-[var(--faint)]">
                     {" "}
                     ({ev.mokapen_status_title})
                   </span>
                 </span>
-                <span className="shrink-0 text-trust-dark/55">
+                <span className="shrink-0 text-[12px] text-[var(--faint)]">
                   {new Date(ev.created_at).toLocaleString("it-IT")}
                 </span>
               </li>
@@ -151,10 +221,11 @@ export default async function ReferralDetailPage({
       <form action={`/api/referrals/${referral.id}/dispute`} method="post">
         <button
           type="submit"
-          className="rounded-control border border-equity/40 px-3 py-2 text-sm text-equity"
+          className="btn-secondary text-[var(--equity)]"
           formAction="#"
           disabled
-          title="Contestazione — collegata in Fase 4"
+          title="Contestazione, collegata in Fase 4"
+          style={{ color: "var(--equity)", borderColor: "rgba(211,0,131,0.35)" }}
         >
           Apri contestazione (prossimamente)
         </button>

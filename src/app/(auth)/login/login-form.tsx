@@ -49,42 +49,35 @@ export function LoginForm({
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="space-y-4 rounded-card bg-white p-6 shadow-soft"
-    >
-      <label className="block space-y-1 text-sm">
-        <span>Email</span>
+    <form onSubmit={onSubmit} className="space-y-4">
+      <label className="block space-y-1.5 text-[14px]">
+        <span className="font-medium">Email</span>
         <input
           type="email"
           required
           autoComplete="username"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-control border border-trust-dark/15 px-3 py-2 outline-none focus:border-trust"
+          className="field-input"
         />
       </label>
-      <label className="block space-y-1 text-sm">
-        <span>Password</span>
+      <label className="block space-y-1.5 text-[14px]">
+        <span className="font-medium">Password</span>
         <input
           type="password"
           required
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-control border border-trust-dark/15 px-3 py-2 outline-none focus:border-trust"
+          className="field-input"
         />
       </label>
       {message ? (
-        <p className="text-sm text-equity" role="alert">
+        <p className="text-[13px] text-[var(--negative)]" role="alert">
           {message}
         </p>
       ) : null}
-      <button
-        type="submit"
-        disabled={busy}
-        className="w-full rounded-control bg-trust-dark px-4 py-2.5 text-sm font-medium text-white disabled:opacity-60"
-      >
+      <button type="submit" disabled={busy} className="btn-primary w-full">
         {busy ? "Accesso…" : "Accedi"}
       </button>
     </form>

@@ -38,13 +38,7 @@ export default function RootLayout({
       <body
         className={`${interTight.variable} ${syne.variable} font-sans antialiased`}
       >
-        <div className="flex min-h-screen flex-col">
-          <main className="flex-1">{children}</main>
-          <footer className="border-t border-trust-dark/10 bg-white/70 px-4 py-3 text-center text-xs text-trust-dark/70">
-            Powered by Imment · Progettato e sviluppato da Giuseppe Pistoia · ©
-            Imment S.r.l.
-          </footer>
-        </div>
+        {children}
       </body>
     </html>
   );
